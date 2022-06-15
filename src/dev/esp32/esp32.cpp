@@ -10,6 +10,7 @@
 #include <rom/rtc.h> // needed to get the ResetInfo
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
+#include "esp_efuse.h"
 
 #include "hasp_conf.h"
 #include "../device.h"
@@ -107,7 +108,7 @@ Esp32Device::Esp32Device()
     _backlight_invert = (TFT_BACKLIGHT_ON == LOW);
     _backlight_power  = 1;
     _backlight_level  = 255;
-    _backlight_pin    = TFT_BCKL;
+    _backlight_pin    = 255; // not TFT_BCKL because it is unkown at this stage
 
     /* fill unique identifier with wifi mac */
     byte mac[6];
@@ -121,9 +122,9 @@ Esp32Device::Esp32Device()
 
 void Esp32Device::reboot()
 {
-    esp_sleep_enable_timer_wakeup(50 * 1000);
-    esp_deep_sleep_start();
-    //    ESP.restart();
+    // esp_sleep_enable_timer_wakeup(50 * 1000);
+    // esp_deep_sleep_start();
+    ESP.restart();
 }
 
 void Esp32Device::show_info()
@@ -141,36 +142,97 @@ const char* Esp32Device::get_core_version()
 }
 const char* Esp32Device::get_chip_model()
 {
+    /*
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
+
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 0)
+    uint32_t chip_ver = esp_efuse_get_chip_ver();
+    uint32_t pkg_ver  = esp_efuse_get_pkg_ver();
+#else
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    uint32_t pkg_ver  = chip_ver & 0x7;
+#endif
 
     //  model = chip_info.cores;
     //  model += F("core ");
     switch(chip_info.model) {
         case CHIP_ESP32:
-            return "ESP32";
+            _chip_model = "ESP32";
+            switch(pkg_ver) {
+                case 0: // EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6
+                    _chip_model += "-D0WDQ6";
+                    break;
+                case 1: // EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5
+                    _chip_model += "-D0WDQ5";
+                    break;
+                case 2: // EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5
+                    _chip_model += "-D2WDQ5";
+                    break;
+                case 4: // EFUSE_RD_CHIP_VER_PKG_ESP32U4WDH:
+                    _chip_model += "-U4WDH";
+                    break;
+                case 5: // EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4
+                    _chip_model += "-PICO-D4";
+                    break;
+                case 6: // EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302
+                    _chip_model += "-PICO-V3-02";
+                    break;
+                case 7: // EFUSE_RD_CHIP_VER_PKG_ESP32D0WDR2V3
+                    _chip_model = "-D0WDR2-V3";
+                    break;
+                default:
+                    _chip_model = "-Unknown";
+            }
+            break;
 
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 0)
 #ifdef ESP32
         case CHIP_ESP32S2:
-            return "ESP32-S2";
+            _chip_model = "ESP32-S2";
+            switch(pkg_ver) {
+                case 0:
+                    break;
+                case 1:
+                    _chip_model += "-MINI-1";
+                    break;
+                case 2:
+                    _chip_model += "FH4";
+                    break;
+                case 3:
+                    _chip_model += "-MINI-1U";
+                    break;
+                default:
+                    _chip_model = "-Unknown";
+            }
+            break;
 
         case CHIP_ESP32S3:
-            return "ESP32-S3";
+            _chip_model = "ESP32-S3";
+            break;
 
         case CHIP_ESP32C3:
-            return "ESP32-C3";
+            _chip_model = "ESP32-C3";
+            break;
 
         case CHIP_ESP32H2:
-            return "ESP32-H2";
+            _chip_model = "ESP32-H2";
+            break;
 #endif
 #endif
 
         default:
-            return "Unknown ESP32";
+            _chip_model = "Unknown ESP32";
     }
-    // model += F(" rev");
-    // model += chip_info.revision;
+    */
+    _chip_model = ESP.getChipModel();
+    _chip_model += " rev";
+#if ESP_ARDUINO_VERSION_MAJOR >= 2
+    _chip_model += std::to_string(ESP.getChipRevision());
+#else
+    _chip_model += String(ESP.getChipRevision()).c_str();
+#endif
+    return _chip_model.c_str();
 }
 
 const char* Esp32Device::get_hardware_id()
@@ -195,6 +257,17 @@ void Esp32Device::set_backlight_pin(uint8_t pin)
     } else {
         LOG_VERBOSE(TAG_GUI, F("Backlight  : Pin not set"));
     }
+}
+
+void Esp32Device::set_backlight_invert(bool invert)
+{
+    _backlight_invert = invert;
+    update_backlight();
+}
+
+bool Esp32Device::get_backlight_invert()
+{
+    return _backlight_invert;
 }
 
 void Esp32Device::set_backlight_level(uint8_t level)
@@ -229,7 +302,7 @@ void Esp32Device::update_backlight()
 #else
         uint32_t duty = _backlight_power ? map(_backlight_level, 0, 255, 0, 1023) : 0;
         if(_backlight_invert) duty = 1023 - duty;
-        ledcWrite(BACKLIGHT_CHANNEL, duty); // ledChannel and value
+        ledcWrite(BACKLIGHT_CHANNEL, duty);     // ledChannel and value
 #endif
     }
 
@@ -283,31 +356,32 @@ uint16_t Esp32Device::get_cpu_frequency()
 
 bool Esp32Device::is_system_pin(uint8_t pin)
 {
-    //Also see esp32.cpp / hasp_gpio.cpp
-    #if defined(ESP32S2)    //Arduino NUM_DIGITAL_PINS = 48 (but espressif says it only has 46)
-        //From https://hggh.github.io/esp32/2021/01/06/ESP32-S2-pinout.html, it looks like IO26 is for PSRAM
-        //More info https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/_images/esp32-s2_saola1-pinout.jpg
-        //Datasheet https://www.espressif.com/sites/default/files/documentation/esp32-s2-wroom_esp32-s2-wroom-i_datasheet_en.pdf
+// Also see esp32.cpp / hasp_gpio.cpp
+#if defined(ESP32S2) // Arduino NUM_DIGITAL_PINS = 48 (but espressif says it only has 46)
+    // From https://hggh.github.io/esp32/2021/01/06/ESP32-S2-pinout.html, it looks like IO26 is for PSRAM
+    // More info https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/_images/esp32-s2_saola1-pinout.jpg
+    // Datasheet
+    // https://www.espressif.com/sites/default/files/documentation/esp32-s2-wroom_esp32-s2-wroom-i_datasheet_en.pdf
 
-        //From the ESP32S2-Wroom pdf, the flash appears to be on the upper set of IO.
-        //SPICS0 = IO10 or IO34 ?
-        //SPICLK = IO12 or IO36 
-        //SPIHD = IO9 or IO33
-        //SPID = IO11 or IO35
-        //SPIQ = IO13 or IO37
-        //SPIWP = IO14 or IO38
-        if((pin >= 33) && (pin <= 38)) return true;  // SPI flash
+    // From the ESP32S2-Wroom pdf, the flash appears to be on the upper set of IO.
+    // SPICS0 = IO10 or IO34 ?
+    // SPICLK = IO12 or IO36
+    // SPIHD = IO9 or IO33
+    // SPID = IO11 or IO35
+    // SPIQ = IO13 or IO37
+    // SPIWP = IO14 or IO38
+    if((pin >= 33) && (pin <= 38)) return true; // SPI flash
 
-        if(psramFound()) {
-            if((pin == 26) ) return true; // PSRAM. IO26 = SPICS1, the rest are shared with the flash
-        }
-    #else
-        if((pin >= 6) && (pin <= 11)) return true;  // integrated SPI flash
-        if((pin == 37) || (pin == 38)) return true; // unavailable
-        if(psramFound()) {
-            if((pin == 16) || (pin == 17)) return true; // PSRAM
-        }
-    #endif
+    if(psramFound()) {
+        if((pin == 26)) return true; // PSRAM. IO26 = SPICS1, the rest are shared with the flash
+    }
+#else
+    if((pin >= 6) && (pin <= 11)) return true;  // integrated SPI flash
+    if((pin == 37) || (pin == 38)) return true; // unavailable
+    if(psramFound()) {
+        if((pin == 16) || (pin == 17)) return true; // PSRAM
+    }
+#endif
     return false;
 }
 
@@ -338,6 +412,15 @@ void Esp32Device::get_info(JsonDocument& doc)
 
     Parser::format_bytes(ESP.getFreeSketchSpace(), size_buf, sizeof(size_buf));
     info[F(D_INFO_SKETCH_FREE)] = size_buf;
+
+    Parser::format_bytes(HASP_FS.totalBytes(), size_buf, sizeof(size_buf));
+    info[F(D_INFO_FS_SIZE)] = size_buf;
+
+    Parser::format_bytes(HASP_FS.usedBytes(), size_buf, sizeof(size_buf));
+    info[F(D_INFO_FS_USED)] = size_buf;
+
+    Parser::format_bytes(HASP_FS.totalBytes() - HASP_FS.usedBytes(), size_buf, sizeof(size_buf));
+    info[F(D_INFO_FS_FREE)] = size_buf;
 }
 
 void Esp32Device::get_sensors(JsonDocument& doc)
@@ -360,7 +443,7 @@ long Esp32Device::get_uptime()
 // #warning Building for Lanbon L8
 #include "dev/esp32/lanbonl8.h"
 #elif defined(M5STACK)
-                                            // #warning Building for M5Stack core2
+  // #warning Building for M5Stack core2
 #include "dev/esp32/m5stackcore2.h"
 #else
 dev::Esp32Device haspDevice;

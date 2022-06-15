@@ -16,20 +16,6 @@
 #include "../../hasp/hasp.h" // for hasp_sleep_state
 extern uint8_t hasp_sleep_state;
 
-// IRAM_ATTR bool touch_read(lv_indev_drv_t* indev_driver, lv_indev_data_t* data)
-// {
-//     if(haspTft.tft.getTouch((uint16_t*)&data->point.x, (uint16_t*)&data->point.y, 300)) {
-//         if(hasp_sleep_state != HASP_SLEEP_OFF) hasp_update_sleep_state(); // update Idle
-//         data->state = LV_INDEV_STATE_PR;
-
-//     } else {
-//         data->state = LV_INDEV_STATE_REL;
-//     }
-
-//     /*Return `false` because we are not buffering and no more data to read*/
-//     return false;
-// }
-
 namespace dev {
 
 class TouchLovyanGfx : public BaseTouch {
@@ -46,8 +32,9 @@ class TouchLovyanGfx : public BaseTouch {
             data->point.x = touchX;
             data->point.y = touchY;
             data->state   = LV_INDEV_STATE_PR;
-            LOG_VERBOSE(TAG_DRVR, F("Touch: %d %d"), touchX, touchY);
+            hasp_set_sleep_offset(0); // Reset the offset
 
+            LOG_VERBOSE(TAG_DRVR, F("Touch: %d %d"), touchX, touchY);
         } else {
             data->state = LV_INDEV_STATE_REL;
         }
@@ -59,7 +46,6 @@ class TouchLovyanGfx : public BaseTouch {
     void init(int w, int h)
     {
         Wire.begin(TOUCH_SDA, TOUCH_SCL, (uint32_t)I2C_TOUCH_FREQUENCY);
-        // delay(300); // already happens in touch.begin()
         touch_scan(Wire);
     }
 

@@ -18,15 +18,21 @@
           WiFi Settings
  **************************************************/
 #define WIFI_SSID ""
-#define WIFI_PASSW ""
+#define WIFI_PASSWORD ""
 
 /***************************************************
-          MQTT Settings
+          Http Server Settings
  **************************************************/
-#define MQTT_HOST ""
+#define HTTP_USERNAME ""
+#define HTTP_PASSWORD ""
+
+/***************************************************
+          MQTT Client Settings
+ **************************************************/
+#define MQTT_HOSTNAME ""
 #define MQTT_PORT 1883
-#define MQTT_USER ""
-#define MQTT_PASSW ""
+#define MQTT_USERNAME ""
+#define MQTT_PASSWORD ""
 #define MQTT_PREFIX "hasp"
 #define MQTT_NODENAME "plate01"
 #define MQTT_GROUPNAME "plates"
@@ -35,13 +41,12 @@
 #define MQTT_STATEPERIOD 300000
 
 /***************************************************
- *        Server Settings
+ *        OTA Settings
  **************************************************/
-#define OTA_HOSTNAME ""
-#define OTA_SERVER ""
-#define OTA_PORT 80
+//#define HASP_USE_ARDUINOOTA 1                       // Enable the Arduino OTA service
+#define ARDUINOOTA_PORT 3232
+#define ARDUINOOTA_PASSWORD ""
 #define OTA_URL ""
-#define OTA_PASSWORD ""
 
 /***************************************************
  *        Syslog Settings
@@ -114,16 +119,19 @@
 // #define HASP_FONT_2 robotocondensed_regular_22_latin1
 // #define HASP_FONT_3 robotocondensed_regular_40_latin1
 // #define HASP_FONT_4 robotocondensed_regular_48_latin1
+// #define HASP_FONT_5 robotocondensed_regular_12_latin1
 
 // #define ROBOTOCONDENSED_REGULAR_16_LATIN1 1           // Enable the selected fonts
 // #define ROBOTOCONDENSED_REGULAR_22_LATIN1 1
 // #define ROBOTOCONDENSED_REGULAR_40_LATIN1 1
 // #define ROBOTOCONDENSED_REGULAR_48_LATIN1 1
+// #define ROBOTOCONDENSED_REGULAR_12_LATIN1 1
 
 // #define HASP_FONT_SIZE_1 16                           // Define used font sizes
 // #define HASP_FONT_SIZE_2 22
 // #define HASP_FONT_SIZE_3 40
 // #define HASP_FONT_SIZE_4 48
+// #define HASP_FONT_SIZE_5 12
 
 #define LV_FONT_DEFAULT &HASP_FONT_1
 
@@ -141,7 +149,10 @@
 //#define HASP_START_CONSOLE 0                        // Disable starting of serial console at boot
 //#define HASP_START_TELNET 0                         // Disable starting of telnet service at boot
 //#define HASP_START_HTTP 0                           // Disable starting of web interface at boot
+//#define HASP_START_FTP 0                            // Disable starting of ftp server at boot
 //#define LV_MEM_SIZE (64 * 1024U)                    // 64KiB of lvgl memory (default 48)
 //#define LV_VDB_SIZE (32 * 1024U)                    // 32KiB of lvgl draw buffer (default 32)
 //#define HASP_DEBUG_OBJ_TREE                         // Output all objects to the log on page changes
-#endif
+//#define HASP_LOG_LEVEL LOG_LEVEL_VERBOSE            // LOG_LEVEL_* can be DEBUG, VERBOSE, TRACE, INFO, WARNING, ERROR, CRITICAL, ALERT, FATAL, SILENT
+
+#endif // HASP_USER_CONFIG_OVERRIDE_H

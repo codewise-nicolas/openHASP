@@ -5,12 +5,12 @@
 #define HASP_GSL1680_TOUCH_DRIVER_H
 
 #ifdef ARDUINO
+#include <Arduino.h>
+#include "ArduinoLog.h"
 #include "hasp_conf.h"
 
-#include <Arduino.h>
 #include <Wire.h>
 #include "GSL2038.h"
-#include "ArduinoLog.h"
 
 #include "touch_driver.h" // base class
 #include "touch_helper.h" // i2c scanner
@@ -61,6 +61,7 @@ class TouchGsl1680 : public BaseTouch {
                 data->point.y = TFT_HEIGHT;
 
             data->state = LV_INDEV_STATE_PR;
+            hasp_set_sleep_offset(0); // Reset the offset
 
         } else {
             data->state = LV_INDEV_STATE_REL;

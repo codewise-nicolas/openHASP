@@ -5,12 +5,12 @@
 #define HASP_GT911_TOUCH_DRIVER_H
 
 #ifdef ARDUINO
+#include <Arduino.h>
+#include "ArduinoLog.h"
 #include "hasp_conf.h"
 
-#include <Arduino.h>
 #include <Wire.h>
 #include "Goodix.h"
-#include "ArduinoLog.h"
 
 #include "touch_driver.h" // base class
 #include "touch_helper.h" // i2c scanner
@@ -78,6 +78,7 @@ class TouchGt911 : public BaseTouch {
             data->point.x = points[0].x;
             data->point.y = points[0].y;
             data->state   = LV_INDEV_STATE_PR;
+            hasp_set_sleep_offset(0); // Reset the offset
 
         } else {
             data->state = LV_INDEV_STATE_REL;

@@ -40,6 +40,7 @@
 
 #define D_SETTING_ENABLED "Habilitado"     // New
 #define D_SETTING_DISABLED "Deshabilitado" // New
+#define D_SETTING_DEFAULT "Default"        // New
 
 #define D_NETWORK_IP_ADDRESS_RECEIVED "Se recibió la dirección IP: %s"
 #define D_NETWORK_ONLINE "en linea"
@@ -146,7 +147,9 @@
 #define D_HTTP_MAIN_MENU "Menú principal"
 #define D_HTTP_REBOOT "Reiniciar"
 #define D_HTTP_CONFIGURATION "Configuración"
-#define D_HTTP_CONFIG_CHANGED "La configuración ha cambiado, haga clic en <a href='/reboot'>Reiniciar</a> para guardar los cambios en la memoria flash."
+#define D_HTTP_CONFIG_CHANGED                                                                                          \
+    "La configuración ha cambiado, haga clic en <a href='/reboot'>Reiniciar</a> para guardar los cambios en la "      \
+    "memoria flash."
 #define D_HTTP_SENDING_PAGE "Se envió pagina %S a %s"
 #define D_HTTP_FOOTER "por Francis Van Roie"
 
@@ -166,6 +169,9 @@
 #define D_INFO_FLASH_SIZE "Tamaño Flash"
 #define D_INFO_SKETCH_USED "Memoria programa usada"
 #define D_INFO_SKETCH_FREE "Memoria Programa libre"
+#define D_INFO_FS_SIZE "Filesystem Size"
+#define D_INFO_FS_USED "Filesystem Used"
+#define D_INFO_FS_FREE "Filesystem Free"
 #define D_INFO_MODULE "Módulo"
 #define D_INFO_MODEL "Modelo"
 #define D_INFO_FREQUENCY "Frecuencia"

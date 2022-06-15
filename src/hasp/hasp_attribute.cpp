@@ -1,10 +1,6 @@
 /* MIT License - Copyright (c) 2019-2022 Francis Van Roie
    For full license information read the LICENSE file in the project folder */
 
-#ifdef ARDUINO
-#include "ArduinoLog.h"
-#endif
-
 #include "hasplib.h"
 #include "hasp_attribute_helper.h"
 
@@ -55,7 +51,7 @@ void my_btnmatrix_map_clear(lv_obj_t* obj)
     lv_btnmatrix_ext_t* ext = (lv_btnmatrix_ext_t*)lv_obj_get_ext_attr(obj);
     const char** map_p_tmp  = ext->map_p; // store current pointer
 
-    LOG_VERBOSE(TAG_ATTR, "%s %d %x   btn_cnt: %d", __FILE__, __LINE__, map_p_tmp, ext->btn_cnt);
+    LOG_DEBUG(TAG_ATTR, "%s %d %x   btn_cnt: %d", __FILE__, __LINE__, map_p_tmp, ext->btn_cnt);
 
     if(ext->map_p && (ext->btn_cnt > 0)) {
 
@@ -130,13 +126,13 @@ const char** my_map_create(const char* payload)
     memset(buffer_addr, 0, tot_len); // Important, last index needs to be 0 => empty string ""
 
     /* Point of no return, destroy & free the previous map */
-    LOG_VERBOSE(TAG_ATTR, F("%s %d   map addr:  %x"), __FILE__, __LINE__, map_data_str);
+    LOG_DEBUG(TAG_ATTR, F("%s %d   map addr:  %x"), __FILE__, __LINE__, map_data_str);
     // my_btnmatrix_map_clear(obj); // Free previous map
 
     // Fill buffer
     size_t index = 0;
     size_t pos   = 0;
-    LOG_VERBOSE(TAG_ATTR, F("%s %d   lbl addr:  %x"), __FILE__, __LINE__, buffer_addr);
+    LOG_DEBUG(TAG_ATTR, F("%s %d   lbl addr:  %x"), __FILE__, __LINE__, buffer_addr);
     for(JsonVariant btn : arr) {
         // size_t len = btn.as<String>().length() + 1;
         size_t len = strlen(btn.as<const char*>()) + 1;
@@ -151,34 +147,34 @@ const char** my_map_create(const char* payload)
     }
     map_data_str[index] = buffer_addr + pos; // save pointer to the last \0 byte
 
-    LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+    LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
     return map_data_str;
 }
 
 static void my_btnmatrix_set_map(lv_obj_t* obj, const char* payload)
 {
-    LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+    LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
     const char** map = my_map_create(payload);
     if(!map) return;
 
-    LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+    LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
     my_btnmatrix_map_clear(obj); // Free previous map
-    LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+    LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
     lv_btnmatrix_set_map(obj, map);
-    LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+    LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
 }
 
 static void my_msgbox_set_map(lv_obj_t* obj, const char* payload)
 {
-    LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+    LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
     const char** map = my_map_create(payload);
     if(!map) return;
 
-    LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+    LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
     my_msgbox_map_clear(obj); // Free previous map
-    LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+    LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
     lv_msgbox_add_btns(obj, map);
-    LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+    LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
 }
 
 void my_line_clear_points(lv_obj_t* obj)
@@ -236,43 +232,40 @@ static lv_font_t* haspPayloadToFont(const char* payload)
     if(Parser::is_only_digits(payload)) {
         uint8_t var = atoi(payload);
 
-        switch(var) {
-            case 0 ... 7:
-                return hasp_get_font(var);
-
-            case 8:
-                return &unscii_8_icon;
+        if(var >= 0 && var < 8)
+            return hasp_get_font(var);
+        else if(var == 8)
+            return &unscii_8_icon;
 
 #ifndef ARDUINO_ARCH_ESP8266
 
 #ifdef HASP_FONT_1
-            case HASP_FONT_SIZE_1:
-                return &HASP_FONT_1;
+        else if(var == HASP_FONT_SIZE_1)
+            return &HASP_FONT_1;
 #endif
 
 #ifdef HASP_FONT_2
-            case HASP_FONT_SIZE_2:
-                LOG_WARNING(TAG_ATTR, "%s %d %x", __FILE__, __LINE__, HASP_FONT_2);
-                return &HASP_FONT_2;
+        else if(var == HASP_FONT_SIZE_2)
+            return &HASP_FONT_2;
 #endif
 
 #ifdef HASP_FONT_3
-            case HASP_FONT_SIZE_3:
-                LOG_WARNING(TAG_ATTR, "%s %d %x", __FILE__, __LINE__, HASP_FONT_3);
-                return &HASP_FONT_3;
+        else if(var == HASP_FONT_SIZE_3)
+            return &HASP_FONT_3;
 #endif
 
 #ifdef HASP_FONT_4
-            case HASP_FONT_SIZE_4:
-                LOG_WARNING(TAG_ATTR, "%s %d %x", __FILE__, __LINE__, HASP_FONT_4);
-                return &HASP_FONT_4;
+        else if(var == HASP_FONT_SIZE_4)
+            return &HASP_FONT_4;
 #endif
 
+#ifdef HASP_FONT_5
+        else if(var == HASP_FONT_SIZE_5)
+            return &HASP_FONT_5;
 #endif
 
-            default:
-                return nullptr;
-        }
+#endif // ARDUINO_ARCH_ESP8266
+
     } else {
         return get_font(payload);
     }
@@ -305,8 +298,201 @@ static hasp_attribute_type_t hasp_process_label_long_mode(lv_obj_t* obj, const c
     return HASP_ATTR_TYPE_NOT_FOUND;
 }
 
-static void hasp_attribute_get_part_state(lv_obj_t* obj, const char* attr_in, char* attr_out, uint8_t& part,
-                                          uint8_t& state)
+size_t hasp_attribute_split_payload(const char* payload)
+{
+    size_t pos = 0;
+    while(*(payload + pos) != '\0') {
+        if(Parser::is_only_digits(payload + pos)) return pos;
+        pos++;
+    }
+    return pos;
+}
+
+static void hasp_attribute_get_part_state_new(lv_obj_t* obj, const char* attr_in, char* attr_out, uint8_t& part,
+                                              uint8_t& state)
+{
+    state = LV_STATE_DEFAULT;
+    part  = LV_OBJ_PART_MAIN;
+
+    size_t pos = hasp_attribute_split_payload(attr_in);
+    if(pos <= 0 || pos >= 32) {
+        attr_out[0] = 0; // empty string
+        return;
+    }
+
+    strncpy(attr_out, attr_in, pos);
+    attr_out[pos] = 0;
+
+    int index         = atoi(attr_in + pos);
+    uint8_t state_num = index % 10;
+    uint8_t part_num  = index - state_num;
+
+    LOG_DEBUG(TAG_ATTR, F("Parsed %s to %s with part %d and state %d"), attr_in, attr_out, part_num, state_num);
+
+#if(LV_SLIDER_PART_INDIC != LV_SWITCH_PART_INDIC) || (LV_SLIDER_PART_KNOB != LV_SWITCH_PART_KNOB) ||                   \
+    (LV_SLIDER_PART_BG != LV_SWITCH_PART_BG) || (LV_SLIDER_PART_INDIC != LV_ARC_PART_INDIC) ||                         \
+    (LV_SLIDER_PART_KNOB != LV_ARC_PART_KNOB) || (LV_SLIDER_PART_BG != LV_ARC_PART_BG) ||                              \
+    (LV_SLIDER_PART_INDIC != LV_SPINNER_PART_INDIC) || (LV_SLIDER_PART_BG != LV_SPINNER_PART_BG) ||                    \
+    (LV_SLIDER_PART_INDIC != LV_BAR_PART_INDIC) || (LV_SLIDER_PART_BG != LV_BAR_PART_BG) ||                            \
+    (LV_SLIDER_PART_KNOB != LV_GAUGE_PART_NEEDLE) || (LV_SLIDER_PART_INDIC != LV_GAUGE_PART_MAJOR) ||                  \
+    (LV_SLIDER_PART_BG != LV_GAUGE_PART_MAIN)
+#error "LV_SLIDER, LV_BAR, LV_ARC, LV_SPINNER, LV_SWITCH, LV_GAUGE parts should match!"
+#endif
+
+    /* States */
+    switch(state_num) {
+        case 1:
+            state = LV_STATE_CHECKED;
+            break;
+        case 2:
+            state = LV_STATE_PRESSED + LV_STATE_DEFAULT;
+            break;
+        case 3:
+            state = LV_STATE_PRESSED + LV_STATE_CHECKED;
+            break;
+        case 4:
+            state = LV_STATE_DISABLED + LV_STATE_DEFAULT;
+            break;
+        case 5:
+            state = LV_STATE_DISABLED + LV_STATE_CHECKED;
+            break;
+        default: // 0 or 6-9
+            state = LV_STATE_DEFAULT;
+    }
+
+    /* Parts */
+    switch(obj_get_type(obj)) {
+        case LV_HASP_BUTTON:
+        case LV_HASP_LABEL:
+        case LV_HASP_LED:
+        case LV_HASP_LINE:
+        case LV_HASP_LINEMETER:
+        case LV_HASP_IMAGE:
+        case LV_HASP_IMGBTN:
+        case LV_HASP_OBJECT:
+        case LV_HASP_TAB:
+            part = LV_BTN_PART_MAIN;
+            break;
+
+        case LV_HASP_BTNMATRIX:
+            switch(part_num) {
+                case LV_HASP_PART_ITEMS:
+                    part = LV_BTNMATRIX_PART_BTN;
+                    break;
+                default:
+                    part = LV_BTNMATRIX_PART_BG;
+            }
+            break;
+
+        case LV_HASP_SLIDER:
+        case LV_HASP_SWITCH:
+        case LV_HASP_ARC:
+            switch(part_num) {
+                case LV_HASP_PART_INDICATOR:
+                    part = LV_SLIDER_PART_INDIC;
+                    break;
+                case LV_HASP_PART_KNOB:
+                    part = LV_SLIDER_PART_KNOB;
+                    break;
+                default:
+                    part = LV_SLIDER_PART_BG;
+            }
+            break;
+
+        case LV_HASP_BAR:
+        case LV_HASP_SPINNER:
+            if(part_num == LV_HASP_PART_INDICATOR) {
+                part = LV_SLIDER_PART_INDIC;
+            } else {
+                part = LV_SLIDER_PART_BG;
+            }
+            break;
+
+        case LV_HASP_CHECKBOX:
+            part = part_num == LV_HASP_PART_INDICATOR ? LV_CHECKBOX_PART_BULLET : LV_CHECKBOX_PART_BG;
+            break;
+
+        case LV_HASP_CPICKER:
+            part = part_num == LV_HASP_PART_KNOB ? LV_CPICKER_PART_KNOB : LV_CPICKER_PART_MAIN;
+            break;
+
+        case LV_HASP_ROLLER:
+            switch(part_num) {
+                case LV_HASP_PART_SELECTED:
+                    part = LV_ROLLER_PART_SELECTED;
+                    break;
+                default:
+                    part = LV_ROLLER_PART_BG;
+            }
+            break;
+
+        case LV_HASP_DROPDOWN:
+            switch(part_num) {
+                case LV_HASP_PART_ITEMS:
+                    part = LV_DROPDOWN_PART_LIST;
+                    break;
+                case LV_HASP_PART_SELECTED:
+                    part = LV_DROPDOWN_PART_SELECTED;
+                    break;
+                case LV_HASP_PART_SCROLLBAR:
+                    part = LV_DROPDOWN_PART_SCROLLBAR;
+                    break;
+                default:
+                    part = LV_DROPDOWN_PART_MAIN;
+            }
+            break;
+
+        case LV_HASP_GAUGE:
+            switch(part_num) {
+                case LV_HASP_PART_INDICATOR:
+                    part = LV_GAUGE_PART_NEEDLE;
+                    break;
+                case LV_HASP_PART_TICKS:
+                    part = LV_GAUGE_PART_MAJOR;
+                    break;
+                default:
+                    part = LV_GAUGE_PART_MAIN;
+            }
+            break;
+
+        case LV_HASP_MSGBOX:
+            switch(part_num) {
+                case LV_HASP_PART_ITEMS_BG:
+                    part = LV_MSGBOX_PART_BTN_BG; // Button Matrix Background
+                    break;
+                case LV_HASP_PART_ITEMS:
+                    part = LV_MSGBOX_PART_BTN; // Button Matrix Buttons
+                    break;
+                default:
+                    part = LV_MSGBOX_PART_BG;
+            }
+            break;
+
+        case LV_HASP_TABVIEW:
+            switch(part_num) {
+                case LV_HASP_PART_INDICATOR:
+                    part = LV_TABVIEW_PART_INDIC; // Rectangle-like object under the currently selected tab
+                    break;
+                case LV_HASP_PART_ITEMS_BG:
+                    part = LV_TABVIEW_PART_TAB_BG; // Button Matrix background
+                    break;
+                case LV_HASP_PART_ITEMS:
+                    part = LV_TABVIEW_PART_TAB_BTN; // Button Matrix Button
+                    break;
+                case LV_HASP_PART_SELECTED:
+                    part = LV_TABVIEW_PART_BG_SCROLLABLE; // It holds the content of the tabs next to each other
+                    break;
+                default:
+                    part = LV_TABVIEW_PART_BG;
+            }
+            break;
+
+        default:; // nothing to do
+    }
+}
+
+static void hasp_attribute_get_part_state_old(lv_obj_t* obj, const char* attr_in, char* attr_out, uint8_t& part,
+                                              uint8_t& state)
 {
     int len = strlen(attr_in);
     if(len <= 0 || len >= 32) {
@@ -474,6 +660,16 @@ static void hasp_attribute_get_part_state(lv_obj_t* obj, const char* attr_in, ch
 
         default:; // nothing to do
     }
+}
+
+static void hasp_attribute_get_part_state(lv_obj_t* obj, const char* attr_in, char* attr_out, uint8_t& part,
+                                          uint8_t& state)
+{
+    size_t pos = hasp_attribute_split_payload(attr_in);
+    if(strlen(attr_in + pos) == 2)
+        hasp_attribute_get_part_state_new(obj, attr_in, attr_out, part, state);
+    else
+        hasp_attribute_get_part_state_old(obj, attr_in, attr_out, part, state);
 }
 
 /**
@@ -657,7 +853,7 @@ static hasp_attribute_type_t hasp_local_style_attr(lv_obj_t* obj, const char* at
         case ATTR_TEXT_FONT: {
             lv_font_t* font = haspPayloadToFont(payload);
             if(font) {
-                LOG_WARNING(TAG_ATTR, "%s %d %x", __FILE__, __LINE__, font);
+                LOG_DEBUG(TAG_ATTR, "%s %d %x", __FILE__, __LINE__, font);
                 uint8_t count = 3;
                 if(obj_check_type(obj, LV_HASP_ROLLER)) count = my_roller_get_visible_row_count(obj);
                 lv_obj_set_style_local_text_font(obj, part, state, font);
@@ -782,7 +978,7 @@ static hasp_attribute_type_t hasp_local_style_attr(lv_obj_t* obj, const char* at
             if(update) {
                 my_obj_set_value_str_text(obj, part, state, payload);
             } else {
-                attr_out_str(obj, attr, lv_obj_get_style_value_str(obj, part));
+                attr_out_str(obj, attr, my_obj_get_value_str_text(obj, part, state));
             }
             return HASP_ATTR_TYPE_METHOD_OK;
         }
@@ -888,6 +1084,24 @@ static hasp_attribute_type_t hasp_process_spinner_attribute(lv_obj_t* obj, uint1
                 lv_spinner_set_type(obj, val % 3);
             else
                 val = lv_spinner_get_type(obj);
+            break;
+
+        default:
+            return HASP_ATTR_TYPE_NOT_FOUND;
+    }
+
+    return HASP_ATTR_TYPE_INT;
+}
+
+static hasp_attribute_type_t hasp_process_slider_attribute(lv_obj_t* obj, uint16_t attr_hash, int32_t& val, bool update)
+{
+    // We already know it's a slider object
+    switch(attr_hash) {
+        case ATTR_TYPE:
+            if(update)
+                lv_slider_set_type(obj, val % 3);
+            else
+                val = lv_slider_get_type(obj);
             break;
 
         default:
@@ -1106,7 +1320,7 @@ static hasp_attribute_type_t special_attribute_src(lv_obj_t* obj, const char* pa
             }
 
         } else {
-#if defined(ARDUINO) && defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO) && defined(ARDUINO_ARCH_ESP32) && 1
             HTTPClient http;
             http.begin(payload);
 
@@ -1157,7 +1371,7 @@ static hasp_attribute_type_t special_attribute_src(lv_obj_t* obj, const char* pa
                 img_dsc->data               = img_buf_start; // store pointer to the start of the data buffer
                 img_dsc->header.always_zero = 0;
 
-                // LOG_WARNING(TAG_ATTR, "%s %d %x == %x", __FILE__, __LINE__, img_dsc->data, img_buf);
+                // LOG_DEBUG(TAG_ATTR, "%s %d %x == %x", __FILE__, __LINE__, img_dsc->data, img_buf);
 
                 int read = 0;
                 while(http.connected() && (stream->available() < 8) && read < 250) {
@@ -1205,10 +1419,10 @@ static hasp_attribute_type_t special_attribute_src(lv_obj_t* obj, const char* pa
                 while(http.connected() && (buf_len > 0)) {
                     if(size_t size = stream->available()) {
                         int c = stream->readBytes(img_buf_pos, size > buf_len ? buf_len : size); // don't read too far
-                        // LOG_WARNING(TAG_ATTR, "%s %d %x -> %x", __FILE__, __LINE__, img_dsc->data, img_buf);
+                        // LOG_DEBUG(TAG_ATTR, "%s %d %x -> %x", __FILE__, __LINE__, img_dsc->data, img_buf);
                         img_buf_pos += c;
                         buf_len -= c;
-                        // LOG_VERBOSE(TAG_ATTR, D_BULLET "IMG DATA: %d bytes read=%d buf_len=%d", c, read, buf_len);
+                        // LOG_DEBUG(TAG_ATTR, D_BULLET "IMG DATA: %d bytes read=%d buf_len=%d", c, read, buf_len);
                         read += c;
                     } else {
                         //  delay(1); // wait for data
@@ -1242,7 +1456,7 @@ static hasp_attribute_type_t special_attribute_src(lv_obj_t* obj, const char* pa
                 }
 
                 lv_img_set_src(obj, img_dsc);
-                // LOG_WARNING(TAG_ATTR, "%s %d %x -> %x", __FILE__, __LINE__, img_buf_start, img_buf_start_pos);
+                // LOG_DEBUG(TAG_ATTR, "%s %d %x -> %x", __FILE__, __LINE__, img_buf_start, img_buf_start_pos);
 
             } else {
                 LOG_WARNING(TAG_ATTR, "HTTP result %d", httpCode);
@@ -1254,19 +1468,19 @@ static hasp_attribute_type_t special_attribute_src(lv_obj_t* obj, const char* pa
         const void* src = lv_img_get_src(obj);
         switch(lv_img_src_get_type(src)) {
             case LV_IMG_SRC_FILE:
-                LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+                LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
                 *text = (char*)lv_img_get_file_name(obj);
                 break;
             case LV_IMG_SRC_SYMBOL:
-                LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+                LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
                 *text = (char*)src + strlen(LV_SYMBOL_DUMMY);
                 break;
             case LV_IMG_SRC_VARIABLE:
-                LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+                LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
                 *text = (char*)src + sizeof(lv_img_dsc_t);
                 break;
             default:
-                LOG_VERBOSE(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
+                LOG_DEBUG(TAG_ATTR, F("%s %d"), __FILE__, __LINE__);
         }
     }
     return HASP_ATTR_TYPE_STR;
@@ -1420,7 +1634,7 @@ static hasp_attribute_type_t attribute_common_json(lv_obj_t* obj, uint16_t attr_
 {
     switch(attr_hash) {
         case ATTR_JSONL: {
-            DeserializationError jsonError;
+            DeserializationError jsonError = DeserializationError::Ok;
 
             if(update) {
 
@@ -1433,17 +1647,20 @@ static hasp_attribute_type_t attribute_common_json(lv_obj_t* obj, uint16_t attr_
                 DeserializationError jsonError = deserializeJson(json, (char*)payload);
                 json.shrinkToFit();
 
-                if(!jsonError) {
+                if(jsonError == DeserializationError::Ok) {
                     // Make sure we have a valid JsonObject to start from
                     if(JsonObject keys = json.as<JsonObject>()) {
                         hasp_parse_json_attributes(obj, keys); // json is valid object, cast as a JsonObject
                     } else {
+                        LOG_DEBUG(TAG_ATTR, "%s %d", __FILE__, __LINE__);
                         jsonError = DeserializationError::InvalidInput;
                     }
                 } else {
+                    LOG_DEBUG(TAG_ATTR, "%s %d", __FILE__, __LINE__);
                     jsonError = DeserializationError::IncompleteInput;
                 }
             }
+            LOG_DEBUG(TAG_ATTR, "%s %d", __FILE__, __LINE__);
 
             if(jsonError) { // Couldn't parse incoming JSON object
                 dispatch_json_error(TAG_ATTR, jsonError);
@@ -1868,7 +2085,10 @@ static hasp_attribute_type_t attribute_common_val(lv_obj_t* obj, int32_t& val, b
             break;
 
         case LV_HASP_ROLLER:
-            lv_roller_set_selected(obj, (uint16_t)val, LV_ANIM_ON);
+            if(update)
+                lv_roller_set_selected(obj, (uint16_t)val, LV_ANIM_ON);
+            else
+                val = lv_roller_get_selected(obj);
             break;
 
         case LV_HASP_BAR:
@@ -2522,6 +2742,11 @@ void hasp_process_obj_attribute(lv_obj_t* obj, const char* attribute, const char
             case LV_HASP_ARC:
                 val = strtol(payload, nullptr, DEC);
                 ret = hasp_process_arc_attribute(obj, attr_hash, val, update);
+                break;
+
+            case LV_HASP_SLIDER:
+                val = strtol(payload, nullptr, DEC);
+                ret = hasp_process_slider_attribute(obj, attr_hash, val, update);
                 break;
 
             case LV_HASP_SPINNER:

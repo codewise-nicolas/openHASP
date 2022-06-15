@@ -33,7 +33,11 @@ struct gui_conf_t
     int8_t backlight_pin;
     uint8_t rotation;
     uint8_t invert_display;
+#if defined(USER_SETUP_LOADED)
     uint16_t cal_data[5];
+#else
+    uint16_t cal_data[8];
+#endif
 };
 
 /* ===== Default Event Processors ===== */
@@ -49,6 +53,7 @@ void gui_hide_pointer(bool hidden);
 void guiCalibrate(void);
 void guiTakeScreenshot(const char* pFileName); // to file
 void guiTakeScreenshot(void);                  // webclient
+bool guiScreenshotIsDirty();
 
 /* ===== Read/Write Configuration ===== */
 #if HASP_USE_CONFIG > 0

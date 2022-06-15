@@ -32,6 +32,7 @@
 
 #define D_SETTING_ENABLED "Ingeschakeld"
 #define D_SETTING_DISABLED "Uitgeschakeld"
+#define D_SETTING_DEFAULT "Standaard"
 
 #define D_SERVICE_STARTING "Starten..."
 #define D_SERVICE_STARTED "Gestart"
@@ -109,8 +110,8 @@
 #define D_JSONL_SUCCEEDED "Jsonl volledig verwerkt"
 
 #define D_OTA_CHECK_UPDATE "Controle update URL: %s"
-#define D_OTA_CHECK_COMPLETE "Update controle klaar"
-#define D_OTA_CHECK_FAILED "Update check failed: %s"
+#define D_OTA_CHECK_COMPLETE "Update gecontroleerd"
+#define D_OTA_CHECK_FAILED "Update controle mislukt: %s"
 #define D_OTA_UPDATE_FIRMWARE "OTA Firmware bijwerken"
 #define D_OTA_UPDATE_COMPLETE "OTA Firmware bijgewerkt"
 #define D_OTA_UPDATE_APPLY "Firmware Schrijven & Herstart"
@@ -146,7 +147,8 @@
 #define D_HTTP_MAIN_MENU "Hoofdmenu"
 #define D_HTTP_REBOOT "Herstarten"
 #define D_HTTP_CONFIGURATION "Configuratie"
-#define D_HTTP_CONFIG_CHANGED "De configuratie is gewijzigd, klik op <a href='/reboot'>Herstart</a> om de wijzigingen naar flash te schrijven."
+#define D_HTTP_CONFIG_CHANGED                                                                                          \
+    "De configuratie is gewijzigd, klik op <a href='/reboot'>Herstart</a> om de wijzigingen naar flash te schrijven."
 #define D_HTTP_SENDING_PAGE "Pagina %S verstuurd naar %s"
 #define D_HTTP_FOOTER "door Francis Van Roie"
 
@@ -164,8 +166,11 @@
 #define D_INFO_PSRAM_FREE "PSRam Vrij"
 #define D_INFO_PSRAM_SIZE "PSRam Grootte"
 #define D_INFO_FLASH_SIZE "Flash Grootte"
-#define D_INFO_SKETCH_USED "Programma Grootte"
+#define D_INFO_SKETCH_USED "Programma Gebruikt"
 #define D_INFO_SKETCH_FREE "Programma Vrij"
+#define D_INFO_FS_SIZE "Bestandssysteem Grootte"
+#define D_INFO_FS_USED "Bestandssysteem Gebruikt"
+#define D_INFO_FS_FREE "Bestandssysteem Vrij"
 #define D_INFO_MODULE "Module"
 #define D_INFO_MODEL "Model"
 #define D_INFO_FREQUENCY "Frequentie"

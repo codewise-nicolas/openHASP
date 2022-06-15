@@ -40,6 +40,7 @@
 
 #define D_SETTING_ENABLED "Enabled"
 #define D_SETTING_DISABLED "Disabled"
+#define D_SETTING_DEFAULT "Default"
 
 #define D_NETWORK_IP_ADDRESS_RECEIVED "Received IP address %s"
 #define D_NETWORK_ONLINE "online"
@@ -108,7 +109,7 @@
 #define D_JSONL_FAILED "JSONL parsing failed at line %u"
 #define D_JSONL_SUCCEEDED "Jsonl fully parsed"
 
-#define D_OTA_CHECK_UPDATE "Checking updates URL: %s"
+#define D_OTA_CHECK_UPDATE "Trying update URL: %s"
 #define D_OTA_CHECK_COMPLETE "Update check complete"
 #define D_OTA_CHECK_FAILED "Update check failed: %s"
 #define D_OTA_UPDATE_FIRMWARE "OTA Firmware Update"
@@ -167,6 +168,9 @@
 #define D_INFO_FLASH_SIZE "Flash Size"
 #define D_INFO_SKETCH_USED "Program Size Used"
 #define D_INFO_SKETCH_FREE "Program Size Free"
+#define D_INFO_FS_SIZE "Filesystem Size"
+#define D_INFO_FS_USED "Filesystem Used"
+#define D_INFO_FS_FREE "Filesystem Free"
 #define D_INFO_MODULE "Module"
 #define D_INFO_MODEL "Model"
 #define D_INFO_FREQUENCY "Frequency"

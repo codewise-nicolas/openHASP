@@ -22,23 +22,15 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "hasp_conf.h"
+#include "hasplib.h"
 
-#include "lvgl.h"
 // #include "app_hal.h"
 #include "display/monitor.h"
 
 #include "hasp_debug.h"
 #include "hasp_gui.h"
 
-#include "hasp/hasp_dispatch.h"
-#include "hasp/hasp.h"
-
 #include "dev/device.h"
-
-#if defined(HASP_USE_CUSTOM)
-#include "custom/my_custom.h"
-#endif
 
 bool isConnected;
 bool isRunning = 1;
@@ -182,7 +174,7 @@ void loop()
         haspEverySecond();     // sleep timer
         dispatchEverySecond(); // sleep timer
 
-#if HASP_USE_OTA > 0
+#if HASP_USE_ARDUINOOTA > 0
         otaEverySecond(); // progressbar
 #endif
 

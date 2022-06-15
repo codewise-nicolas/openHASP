@@ -5,12 +5,11 @@
 #define HASP_ANALOG_TOUCH_DRIVER_H
 
 #ifdef ARDUINO
+#include <Arduino.h>
+#include "ArduinoLog.h"
 #include "hasp_conf.h"
 
-#include <Arduino.h>
-#include "../old/hasp_drv_analogTouch.h"
-#include "ArduinoLog.h"
-
+#include "hasp_drv_analogTouch.h"
 #include "touch_driver.h" // base class
 
 #include "../../hasp/hasp.h" // for hasp_sleep_state
@@ -23,21 +22,6 @@ const int TS_LEFT = 560, TS_RT = 3670, TS_TOP = 3850, TS_BOT = 580;
 int max_x = 4095, max_y = 4095;
 
 static TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
-
-// IRAM_ATTR bool touch_read(lv_indev_drv_t* indev_driver, lv_indev_data_t* data)
-// {
-//     static TSPoint tp;
-//     tp = ts.getPoint();
-//     if(tp.z < MINPRESSURE) {
-//         data->state = LV_INDEV_STATE_REL;
-//     } else {
-//         data->point.x = map(tp.x, TS_LEFT, TS_RT, 0, max_x);
-//         data->point.y = map(tp.y, TS_BOT, TS_TOP, max_y, 0);
-//         data->state   = LV_INDEV_STATE_PR;
-//     }
-
-//     return false;
-// }
 
 namespace dev {
 
@@ -60,6 +44,7 @@ class AnalogTouch : public BaseTouch {
             data->point.x = map(tp.x, TS_LEFT, TS_RT, 0, max_x);
             data->point.y = map(tp.y, TS_BOT, TS_TOP, max_y, 0);
             data->state   = LV_INDEV_STATE_PR;
+            hasp_set_sleep_offset(0); // Reset the offset
         }
 
         return false;

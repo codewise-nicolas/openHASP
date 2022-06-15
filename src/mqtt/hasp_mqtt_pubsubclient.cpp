@@ -42,10 +42,6 @@ EthernetClient mqttNetworkClient;
 
 #include "../hasp/hasp_dispatch.h"
 
-// #ifdef USE_CONFIG_OVERRIDE
-// #include "user_config_override.h"
-// #endif
-
 char mqttNodeTopic[24];
 char mqttGroupTopic[24];
 bool mqttEnabled        = false;
@@ -54,9 +50,9 @@ uint32_t mqttPublishCount;
 uint32_t mqttReceiveCount;
 uint32_t mqttFailedCount;
 
-char mqttServer[MAX_HOSTNAME_LENGTH]   = MQTT_HOST;
-char mqttUsername[MAX_USERNAME_LENGTH] = MQTT_USER;
-char mqttPassword[MAX_PASSWORD_LENGTH] = MQTT_PASSW;
+char mqttServer[MAX_HOSTNAME_LENGTH]   = MQTT_HOSTNAME;
+char mqttUsername[MAX_USERNAME_LENGTH] = MQTT_USERNAME;
+char mqttPassword[MAX_PASSWORD_LENGTH] = MQTT_PASSWORD;
 // char mqttNodeName[16]  = MQTT_NODENAME;
 char mqttGroupName[16] = MQTT_GROUPNAME;
 uint16_t mqttPort      = MQTT_PORT;
@@ -71,10 +67,11 @@ int mqttPublish(const char* topic, const char* payload, size_t len, bool retain)
         return MQTT_ERR_NO_CONN;
     }
 
+    // Write directly to the client, don't use the buffer
     if(mqttClient.beginPublish(topic, len, retain)) {
-        mqttPublishCount++;
         mqttClient.write((uint8_t*)payload, len);
         mqttClient.endPublish();
+        mqttPublishCount++;
         return MQTT_ERR_OK;
     }
 

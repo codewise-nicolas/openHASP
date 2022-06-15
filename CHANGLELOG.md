@@ -1,69 +1,82 @@
 # openHASP Changelog
 
+<!--
 ## v0.7.0
+
+### Objects
+- Support for State and Part properties
 
 ### Web UI
 - _Selectable dark/light theme?_
 
-### Objects
-- All objects have a custom `tag` property which can contain abritrary JSON data *(or numbers or text)* (thanks @nagyrobi)
-
-### Fonts
-- Use FreeType fonts from flash
-- Use LVGL binary fonts from flash, loaded into PSram
-- ~~Breaking: The UTF codes for the built-in icons have changed from the previous list!~~
-- Font ID is replaced by `namexx` (`where xx is the size`) but the previous Font ID still works for backwards compatibility
-
 ### Services
 - Add SimpleFTPServer to easily upload and download files to the plate *(one simultanious connection only)*
 
-### Architecture
-- Moved to Arduino 2.0.2 with native LittleFS library
-- Moved to ESP-IDF 4.4 with fix for FragAttacks CVEs
+### Devices
+- Add support for Wireless-Tag WT-86-32-3ZW1
 
+-->
 
 ## v0.6.3
 
-### Web UI
-- Updated to modern responsive design
-- Allow for a customizible `vars.css`, `style.css`, `script.js` and `edit.htm`
-- Display info message when configuration is changed and reboot is needed
-- Add checkbox to toggle ANSI codes (thanks @geiseri)
-
-### GUI
-- Hide cursor during `antiburn` and `idle` if the pointer is enabled
-- Screenshot images now display properly in Safari on macOS/iOS (thanks @masto)
-
-### MQTT
--  Remember last `page` id for mqtt messages
+### Commands
+- Additional `idle` parameters now accept `off`, `short` and `long`
+- Add `sensors` command to trigger the sensors state message
+- Run `L:/boot.cmd` when the plate is (re)booted if the script exists
+- You can now use the `pXbY.jsonl` command to update multiple object properties at once (thanks @nagyrobi)
 
 ### Objects
+- All objects have a custom `tag` property which can contain arbitrary JSON data *(or numbers or text)* (thanks @nagyrobi)
 - `img.src` now accepts both `http` and `https` urls (thanks @htvekov)
 - `img.src` now accepts `png` and `binary` image urls, PSram is *highly* recommended
 - `img.src` now accepts 16-bit BMP files stored in flash
 
+### Web UI
+- Updated to modern responsive design *(requires JavaScript)*
+- Add `/api/info/` and `/api/config/*/` endpoints
+- Allow for a customizible `vars.css`, `style.css`, `script.js` and `edit.htm`
+- Display a message when the configuration is changed and a reboot is needed
+- Add checkbox for backlight inversion to Display settings (thanks @wolffman122)
+- Add checkbox to toggle ANSI codes #261 (thanks @geiseri)
+- Allow firmware upgrade/downgrade in AP mode
+
+### GUI
+- `antiburn` displays random pixels *aka.* white noise
+- Hide cursor during `antiburn` and `idle` if the pointer is enabled
+
+### MQTT
+-  Remember last `page` id of `jsonl` messages. Sending multiple messages now behaves like `jsonl` files (thanks @arovak)
+
 ### Fonts
-- Added Vietnamese encoding build option (thanks @kydang789)
-- **Breaking:** Removed defunct .zi font support
+- Use TrueType fonts from flash, PSram is *highly* recommended (thanks to @s-hadinger)
+- Custom LVGL binary fonts can be read from flash and loaded into memory, PSram is *highly* recommended
+- Font ID is replaced by `namexx` *(where `xx` is the font size)* but the previous Font IDs still work for backwards compatibility
+- Added build option for Vietnamese character set (thanks @kydang789)
+- ⚠️ **Breaking:** Removed defunct .zi font support!
 
 ### Bug fixes
-- Fix bug that would not accept `on` state for setting output GPIOs (thanks @freshnas and @cerietke)
-- Fix a bug in `dropdownlist` were `close` method performed `open` instead (thanks @htvekov)
+- Fixed Lanbon L8 v1.17 PCB screen corruption #316 (thanks @DJBenson)- Fix for screenshots not showing properly in Safari on macOS/iOS (thanks @masto)
+- Fix bug that would not accept `on` state for setting output GPIOs #275 (thanks @freshnas and @cerietke)
+- Fix a bug in `dropdownlist` were `close` method performed `open` instead #299 (thanks @htvekov)
 - Fix `src` bug in `img` objects that could corrupt images sent over http (thanks @htvekov)
-- Fix screen dimensions in `statusupdate` message, taking into account current orientation (thanks @kquinsland)
-- Fix syslog message format (thanks @geiseri)
+- Fix screen dimensions in `statusupdate` message, taking into account current orientation #278 (thanks @kquinsland)
 - Fix for HTTP password that could be overwritten by 8 asterisks when it was not changed in the web UI
-- Fixed MQTT hostname limit (again)
+- Fixed MQTT hostname limit *again*... #304 (thanks @fake-name)
+- Fixed firmware upgrade from URL #300 (thank @nagyrobi)
+- Fixed a bug that prevented Wifi from connecting to different BSSID #330 (thanks @Braehead)
+- Syslog message format fixes and improvements #285 (thanks @geiseri)
 
 ### Custom component
-- Expose `antiburn` for the CC (thanks @dgomes)
-- Expose the device URL in discovery message
+- Expose `antiburn` and `page` in the CC (thanks @dgomes)
+- Expose the device URL in discovery message and CC
 
 ### Architecture
-- Prepare support for ESP32-S2
-- **Breaking:** Removed support for ESP8266!
+- Moved to Tasmota Arduino 2.0.3 with native LittleFS library (thanks @Jason2866) and ESP-IDF 4.4.1 fixes for FragAttacks CVEs (thanks @nagyrobi)
+- Add support for ESP32-S2 devices
+- ⚠️ **Breaking:** Removed support for ESP8266!
 
-Updated libraries to ArduinoJson 6.19.3,  ArduinoStreamUtils 1.6.2, TFT_eSPI 2.4.42, LovyanGFX 0.4.14 and Adafruit STMPE610 1.1.4
+Updated libraries to ArduinoJson 6.19.4, ArduinoStreamUtils 1.6.3, AceButton 1.9.2, TFT_eSPI 2.4.61, LovyanGFX 0.4.17 and Adafruit STMPE610 1.1.4
+
 
 
 ## v0.6.2

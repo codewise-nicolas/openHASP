@@ -6,9 +6,8 @@
 #include "hasplib.h"
 #include "hasp_oobe.h"
 #include "sys/net/hasp_network.h"
+#include "sys/net/hasp_time.h"
 #include "dev/device.h"
-// #include "drv/old/hasp_drv_touch.h"
-#include "ArduinoLog.h"
 
 #if HASP_USE_CONFIG > 0
 #include "hasp_debug.h"
@@ -18,10 +17,6 @@
 #if HASP_USE_CONFIG > 0
 #include "hasp_config.h"
 #include "hasp_gui.h"
-#endif
-
-#if defined(HASP_USE_CUSTOM)
-#include "custom/my_custom.h"
 #endif
 
 bool isConnected;
@@ -63,10 +58,11 @@ void setup()
     dispatchSetup(); // before hasp and oobe, asap after logging starts
     guiSetup();
 
+    bool oobe = false;
 #if HASP_USE_CONFIG > 0
-    if(!oobeSetup())
+    oobe = oobeSetup();
 #endif
-    {
+    if(!oobe) {
         haspSetup();
     }
 
@@ -84,13 +80,14 @@ void setup()
 
 #if HASP_USE_WIFI > 0 || HASP_USE_ETHERNET > 0
     networkSetup();
+    timeSetup();
 #endif
 
 #if HASP_USE_MDNS > 0
     mdnsSetup();
 #endif
 
-#if HASP_USE_OTA > 0
+#if HASP_USE_ARDUINOOTA > 0 || HASP_USE_HTTP_UPDATE > 0
     otaSetup();
 #endif
 
@@ -118,28 +115,32 @@ void setup()
     custom_setup();
 #endif
 
-    mainLastLoopTime = -1000; // reset loop counter
-    delay(20);
     // guiStart();
+
+    delay(20);
+    if(!oobe) {
+        dispatch_exec(NULL, "L:/boot.cmd", TAG_HASP);
+#if HASP_USE_WIFI > 0 || HASP_USE_ETHERNET > 0
+        network_run_scripts();
+#endif
+    }
+    mainLastLoopTime = -1000; // reset loop counter
 }
 
 IRAM_ATTR void loop()
 {
     guiLoop();
-    // haspLoop();
 
-    networkLoop();
+#if HASP_USE_WIFI > 0 || HASP_USE_ETHERNET > 0
+   networkLoop();
+#endif
 
 #if HASP_USE_GPIO > 0
-    //  gpioLoop();
-    // Should be called every 4-5ms or faster, for the default debouncing time of ~20ms.
-    for(uint8_t i = 0; i < HASP_NUM_GPIO_CONFIG; i++) {
-        if(gpioConfig[i].btn) gpioConfig[i].btn->check();
-    }
+    gpioLoop();
 #endif // GPIO
 
 #if HASP_USE_MQTT > 0
-    mqttClient.loop(); // mqttLoop();
+    mqttLoop();
 #endif
 
     // haspDevice.loop();
@@ -199,10 +200,12 @@ IRAM_ATTR void loop()
                 break;
 
             case 4:
+#if HASP_USE_WIFI > 0 || HASP_USE_ETHERNET > 0
                 isConnected = networkEvery5Seconds(); // Check connection
 
 #if HASP_USE_MQTT > 0
                 mqttEvery5Seconds(isConnected);
+#endif
 #endif
                 break;
 
@@ -217,11 +220,11 @@ IRAM_ATTR void loop()
         }
     }
 
+// allow the cpu to switch to other tasks
 #ifdef ARDUINO_ARCH_ESP8266
     delay(2); // ms
 #else
     delay(3); // ms
-              // delay((lv_task_get_idle() >> 5) + 3); // 2..5 ms
 #endif
 }
 

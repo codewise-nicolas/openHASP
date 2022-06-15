@@ -16,10 +16,6 @@ For full license information read the LICENSE file in the project folder */
 #include "hasp_gui.h"
 #endif
 
-#if defined(HASP_USE_CUSTOM)
-#include "custom/my_custom.h"
-#endif
-
 #ifdef HASP_USE_STAT_COUNTER
 extern uint16_t statLoopCounter; // measures the average looptime
 #endif
@@ -82,6 +78,7 @@ void task_every_second_cb(lv_task_t* task)
 
 void task_teleperiod_cb(lv_task_t* task)
 {
+#if HASP_USE_MQTT > 0
     if(!mqttIsConnected()) return;
 
     switch(task->repeat_count) {
@@ -98,4 +95,5 @@ void task_teleperiod_cb(lv_task_t* task)
 
     // task is about to get deleted
     if(task->repeat_count == 1) task->repeat_count = 4;
+#endif
 }

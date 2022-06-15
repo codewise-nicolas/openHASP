@@ -1,56 +1,59 @@
 /* MIT License - Copyright (c) 2019-2022 Francis Van Roie
    For full license information read the LICENSE file in the project folder */
 
-#include <time.h>
-#include <sys/time.h>
+#include "hasplib.h"
 
-#include <Arduino.h>
-#include "ArduinoLog.h"
-
-#include "hasp_conf.h"
 #include "hal/hasp_hal.h"
 #include "hasp_debug.h"
 #include "hasp_network.h"
-
-#include "hasp/hasp.h"
 #include "sys/svc/hasp_mdns.h"
 
-#if defined(ARDUINO_ARCH_ESP32)
-#include "Preferences.h"
-#endif
-
-#ifndef MYTZ
-#define MYTZ "EST5EDT,M3.2.0/2,M11.1.0"
-#endif
-
-#ifndef NTPSERVER1
-#define NTPSERVER1 "pool.ntp.org"
-#endif
-
-#ifndef NTPSERVER2
-#define NTPSERVER2 "time.nist.gov"
-#endif
-
-#ifndef NTPSERVER3
-#define NTPSERVER3 "time.google.com"
-#endif
-
-#if defined(ARDUINO_ARCH_ESP32)
-// These strings must be constant and kept in memory
-String mytz((char*)0);
-String ntp1((char*)0);
-String ntp2((char*)0);
-String ntp3((char*)0);
-#endif
+bool last_network_state            = false;
+bool current_network_state         = false;
+uint16_t network_reconnect_counter = 0;
 
 #if HASP_USE_ETHERNET > 0 || HASP_USE_WIFI > 0
+
+void network_disconnected()
+{
+
+    // if(wifiReconnectCounter++ % 5 == 0)
+    //     LOG_WARNING(TAG_NETW, F("Disconnected from %s (Reason: %s [%d])"), ssid, buffer, reason);
+
+    // if(!current_network_state) return; // we were not connected
+
+    current_network_state = false; // now we are disconnected
+    network_reconnect_counter++;
+    // LOG_VERBOSE(TAG_NETW, F("Connected = %s"),
+    //             WiFi.status() == WL_CONNECTED ? PSTR(D_NETWORK_ONLINE) : PSTR(D_NETWORK_OFFLINE));
+}
+
+void network_connected()
+{
+    if(current_network_state) return; // already connected
+
+    current_network_state     = true; // now we are connected
+    network_reconnect_counter = 0;
+    LOG_VERBOSE(TAG_NETW, F("Connected = %s"),
+                WiFi.status() == WL_CONNECTED ? PSTR(D_NETWORK_ONLINE) : PSTR(D_NETWORK_OFFLINE));
+}
+
+void network_run_scripts()
+{
+    if(last_network_state != current_network_state) {
+        if(current_network_state) {
+            dispatch_exec(NULL, "L:/online.cmd", TAG_NETW);
+            networkStart();
+        } else {
+            dispatch_exec(NULL, "L:/offline.cmd", TAG_NETW);
+            networkStop();
+        }
+        last_network_state = current_network_state;
+    }
+}
+
 void networkStart(void)
 {
-#if defined(ARDUINO_ARCH_ESP8266)
-    LOG_WARNING(TAG_MAIN, F("TIMEZONE: %s"), MYTZ);
-    configTzTime(MYTZ, NTPSERVER1, NTPSERVER2, NTPSERVER3); // literal string
-#endif
-
     // haspProgressVal(255); // hide
     haspReconnect();
     debugStartSyslog();
@@ -69,6 +72,7 @@ void networkStart(void)
 void networkStop(void)
 {
     haspProgressMsg(F("Network Disconnected"));
+    network_reconnect_counter = 0; // Prevent endless loop in wifiDisconnected
 
     debugStopSyslog();
     // mqttStop();
@@ -79,26 +83,17 @@ void networkStop(void)
 #if HASP_USE_MDNS > 0
     mdnsStop();
 #endif
-}
 
-void networkSetup()
-{
-#if defined(ARDUINO_ARCH_ESP32)
-    Preferences preferences;
-    preferences.begin("time", false);
-
-    mytz = preferences.getString("tz", MYTZ);
-    ntp1 = preferences.getString("ntp1", NTPSERVER1);
-    ntp2 = preferences.getString("ntp2", NTPSERVER2);
-    ntp3 = preferences.getString("ntp3", NTPSERVER3);
-
-    LOG_WARNING(TAG_MAIN, F("TIMEZONE: %s"), mytz.c_str());
-    LOG_WARNING(TAG_MAIN, F("NTPSERVER: %s %s %s"), ntp1.c_str(), ntp2.c_str(), ntp3.c_str());
-
-    configTzTime(mytz.c_str(), ntp1.c_str(), ntp2.c_str(), ntp3.c_str());
-    preferences.end();
+#if HASP_USE_ETHERNET > 0
+    // ethernetStop();
 #endif
 
+#if HASP_USE_WIFI > 0
+    wifiStop();
+#endif
+}
+void networkSetup()
+{
 #if HASP_USE_ETHERNET > 0
     ethernetSetup();
 #endif
@@ -126,7 +121,7 @@ IRAM_ATTR void networkLoop(void)
     httpLoop();
 #endif // HTTP
 
-#if HASP_USE_OTA > 0
+#if HASP_USE_ARDUINOOTA > 0
     otaLoop();
 #endif // OTA
 
@@ -145,15 +140,8 @@ IRAM_ATTR void networkLoop(void)
 
 bool networkEvery5Seconds(void)
 {
-#if HASP_USE_ETHERNET > 0
-    return ethernetEvery5Seconds();
-#endif
-
-#if HASP_USE_WIFI > 0
-    return wifiEvery5Seconds();
-#endif
-
-    return false;
+    if(current_network_state != last_network_state) network_run_scripts();
+    return current_network_state;
 }
 
 /* bool networkEverySecond(void)
@@ -168,7 +156,7 @@ bool networkEvery5Seconds(void)
     // connected |= wifiEverySecond();
 #endif
 
-#if HASP_USE_OTA > 0
+#if HASP_USE_ARDUINOOTA > 0
     otaEverySecond(); // progressbar
 #endif
 
@@ -189,9 +177,18 @@ void network_get_statusupdate(char* buffer, size_t len)
 void network_get_ipaddress(char* buffer, size_t len)
 {
 #if HASP_USE_ETHERNET > 0
+#if defined(ARDUINO_ARCH_ESP32)
+#if HASP_USE_SPI_ETHERNET > 0
+    IPAddress ip = WiFi.localIP();
+#else
+    IPAddress ip = ETH.localIP();
+#endif
+#else
     IPAddress ip = Ethernet.localIP();
+#endif
     snprintf_P(buffer, len, PSTR("%d.%d.%d.%d"), ip[0], ip[1], ip[2], ip[3]);
     return;
+    ethernet_get_ipaddress(buffer, len);
 #endif
 
 #if HASP_USE_WIFI > 0

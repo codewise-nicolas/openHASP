@@ -85,7 +85,31 @@ bool configSet(uint16_t& value, const JsonVariant& setting, const __FlashStringH
     }
     return false;
 }
-
+bool configSet(int32_t& value, const JsonVariant& setting, const __FlashStringHelper* fstr_name)
+{
+    if(!setting.isNull()) {
+        int32_t val = setting.as<int32_t>();
+        if(value != val) {
+            confDebugSet(fstr_name);
+            value = val;
+            return true;
+        }
+    }
+    return false;
+}
+bool configSet(lv_color_t& value, const JsonVariant& setting, const __FlashStringHelper* fstr_name)
+{
+    lv_color32_t c32;
+    if(!setting.isNull() && Parser::haspPayloadToColor(setting.as<const char*>(), c32)) {
+        lv_color_t val = lv_color_make(c32.ch.red, c32.ch.green, c32.ch.blue);
+        if(value.full != val.full) {
+            confDebugSet(fstr_name);
+            value = val;
+            return true;
+        }
+    }
+    return false;
+}
 void configSetupDebug(JsonDocument& settings)
 {
     debugSetup(settings[FPSTR(FP_DEBUG)]);
@@ -199,7 +223,8 @@ DeserializationError configRead(JsonDocument& settings, bool setupdebug = false)
 #if HASP_USE_CONFIG > 0 && defined(HASP_GPIO_TEMPLATE)
     // Load custom GPIO template
     char json[96];
-    snprintf(json, sizeof(json), PSTR("{\"%s\":%s}"), (char*)(FPSTR(FP_GPIO_CONFIG)), (char*)(FPSTR(HASP_GPIO_TEMPLATE)));
+    snprintf(json, sizeof(json), PSTR("{\"%s\":%s}"), (char*)(FPSTR(FP_GPIO_CONFIG)),
+             (char*)(FPSTR(HASP_GPIO_TEMPLATE)));
     dispatch_config((char*)(FPSTR(FP_GPIO)), json, TAG_CONF);
 #endif
 

@@ -53,8 +53,12 @@
 #define HASP_HAS_NETWORK                                                                                               \
     (ARDUINO_ARCH_ESP32 > 0 || ARDUINO_ARCH_ESP8266 > 0 || HASP_USE_ETHERNET > 0 || HASP_USE_WIFI > 0)
 
-#ifndef HASP_USE_OTA
-#define HASP_USE_OTA 0 //(HASP_HAS_NETWORK)
+#ifndef HASP_USE_ARDUINOOTA
+#define HASP_USE_ARDUINOOTA 0 //(HASP_HAS_NETWORK)
+#endif
+
+#ifndef HASP_USE_HTTP_UPDATE
+#define HASP_USE_HTTP_UPDATE (HASP_HAS_NETWORK)
 #endif
 
 #ifndef HASP_USE_MQTT
@@ -103,10 +107,6 @@
 
 #ifndef HASP_USE_TELNET
 #define HASP_USE_TELNET 0
-#endif
-
-#ifndef HASP_START_FTP
-#define HASP_START_FTP 1
 #endif
 
 #ifndef HASP_START_TELNET
@@ -234,8 +234,13 @@ static WiFiSpiClass WiFi;
 
 #if HASP_USE_ETHERNET > 0
 #if defined(ARDUINO_ARCH_ESP32)
-#include <ETH.h>
+#include "sys/net/hasp_ethernet_esp32.h"
+#if HASP_USE_SPI_ETHERNET > 0
+#include <ETHSPI.h>
+#warning Using ESP32 Ethernet SPI W5500
+#define HASP_ETHERNET ETHSPI
 
+#else
 #define ETH_ADDR 0
 #define ETH_POWER_PIN -1
 #define ETH_MDC_PIN 23
@@ -243,9 +248,10 @@ static WiFiSpiClass WiFi;
 #define NRST 5
 #define ETH_TYPE ETH_PHY_LAN8720
 #define ETH_CLKMODE ETH_CLOCK_GPIO17_OUT
-
-#include "sys/net/hasp_ethernet_esp32.h"
+#include <ETH.h>
 #warning Using ESP32 Ethernet LAN8720
+#define HASP_ETHERNET ETH
+#endif // HASP_USE_SPI_ETHERNET
 
 #else
 #if USE_BUILTIN_ETHERNET > 0
@@ -303,7 +309,7 @@ static WiFiSpiClass WiFi;
 #include "sys/svc/hasp_mdns.h"
 #endif
 
-#if HASP_USE_OTA > 0
+#if HASP_USE_ARDUINOOTA > 0 || HASP_USE_HTTP_UPDATE > 0
 #include "sys/svc/hasp_ota.h"
 #endif
 

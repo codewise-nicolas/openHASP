@@ -1,6 +1,10 @@
 /* MIT License - Copyright (c) 2019-2022 Francis Van Roie
    For full license information read the LICENSE file in the project folder */
 
+#ifdef ARDUINO
+#include "ArduinoLog.h"
+#endif
+
 #include "hasp_conf.h" // include first
 
 #if HASP_USE_SPIFFS > 0 || HASP_USE_LITTLEFS > 0
@@ -156,7 +160,7 @@ void filesystemInfo()
     Parser::format_bytes(HASP_FS.totalBytes(), total, sizeof(total));
 #endif
 
-    Log.verbose(TAG_FILE, "Partition size: used: %s / total: %s", total, used);
+    Log.verbose(TAG_FILE, "Partition size: used: %s / total: %s", used, total);
 }
 
 void filesystemList()

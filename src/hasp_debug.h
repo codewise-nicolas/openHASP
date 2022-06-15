@@ -4,6 +4,10 @@
 #ifndef HASP_DEBUG_H
 #define HASP_DEBUG_H
 
+#ifdef ARDUINO
+#include "ArduinoLog.h"
+#endif
+
 #include "hasp_conf.h"
 
 #include "ArduinoJson.h"
@@ -14,8 +18,6 @@
 #include "lang/lang.h"
 
 #if(!defined(WINDOWS)) && (!defined(POSIX))
-#include "ArduinoLog.h"
-
 /* ===== Default Event Processors ===== */
 void debugSetup(JsonObject settings);
 
@@ -180,8 +182,6 @@ enum {
     TAG_FILE = 31,
     TAG_GPIO = 40,
 
-    TAG_FWUP = 50,
-
     TAG_ETH      = 60,
     TAG_WIFI     = 61,
     TAG_HTTP     = 62,
@@ -191,6 +191,8 @@ enum {
     TAG_MQTT_PUB = 66,
     TAG_MQTT_RCV = 67,
     TAG_FTP      = 68,
+    TAG_TIME     = 69,
+    TAG_NETW     = 70,
 
     TAG_LVGL = 90,
     TAG_LVFS = 91,
